@@ -31,16 +31,6 @@ module pci(
 		   output logic		  intc,
 		   output logic		  intd);	
 
-`ifdef VERILATOR
-	pullup(frame);
-	pullup(irdy);
-	pullup(trdy);
-	pullup(stop);
-	pullup(lock);
-	pullup(devsel);
-	pullup(perr);
-`endif
-
 	logic					  cfg_enable;
 	logic					  cfg_iswrite;
 	logic [5:0]				  cfg_offset;

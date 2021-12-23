@@ -15,6 +15,7 @@ module pci_cfg(input logic clk,
 			if(cfg_iswrite == 1'b0) begin
 				case(cfg_offset)
 					6'h00: cfg_read_val <= 32'h12345678;
+					6'h01: cfg_read_val <= 32'haabbccdd;
 					default: cfg_read_val <= 32'hffffffff;
 				endcase // case (offset)
 			end

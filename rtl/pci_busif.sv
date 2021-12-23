@@ -39,8 +39,9 @@ module pci_busif(
 
 	// PCI bus FSM states
 	localparam						 IDLE = 4'h0;
-	localparam						 CFG_READ_WAIT_IRDY=4'h1;
-	localparam						 CFG_READ_COMP=4'h2;
+	localparam						 CFG_READ_WAIT_BE=4'h1;
+	localparam						 CFG_READ_WAIT_IRDY=4'h2;
+	localparam						 CFG_READ_COMP=4'h3;
 
 	// PCI Commands
 	localparam						 PCI_CMD_CFG_READ=4'b1010;
@@ -81,7 +82,7 @@ module pci_busif(
 	assign devsel=devsel_en?devsel_out:1'bz;
 	
 	always_ff @(posedge clk) begin
-		if(rst == 1'b1) begin
+		if(rst == 1'b0) begin
 			state <= IDLE;
 		end else begin
 			state <= next_state;
@@ -112,11 +113,14 @@ module pci_busif(
 			IDLE: begin
 				if(frame==1'b0) begin
 					if((idsel == 1'b1) && (cbe_in == PCI_CMD_CFG_READ) && (ad_in[1:0] == 2'b00)&&(ad_in[10:8]==3'b000)) begin
-						next_state = CFG_READ_WAIT_IRDY;
+						next_state = CFG_READ_WAIT_BE;
 						cfg_enable = 1'b1;
 						cfg_offset=ad_in[7:2];
 					end
 				end
+			end
+			CFG_READ_WAIT_BE: begin
+				next_state=CFG_READ_WAIT_IRDY;
 			end
 			CFG_READ_WAIT_IRDY: begin
 				if(irdy == 1'b0) begin
@@ -127,8 +131,6 @@ module pci_busif(
 					ad_out = cfg_read_val;
 					ad_en = 1'b1;
 					next_state = CFG_READ_COMP;
-				end else begin
-					next_state = CFG_READ_WAIT_IRDY;
 				end
 			end
 			CFG_READ_COMP: begin
