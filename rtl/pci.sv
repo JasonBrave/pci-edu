@@ -71,6 +71,13 @@ module pci(
 									.cfg_iswrite(cfg_iswrite),
 									.cfg_offset(cfg_offset),
 									.cfg_write_val(cfg_write_val),
-									.cfg_read_val(cfg_read_val));
+									.cfg_read_val(cfg_read_val),
+									.intr_status(1'b0),
+									.master_data_parity_error(1'b0),
+									.signaled_target_abort(1'b0),
+									.received_target_abort(1'b0),
+									.received_master_abort(1'b0),
+									.signaled_system_error(1'b0),
+									.detected_parity_error(1'b0));
 	
 endmodule // pci
