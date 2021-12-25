@@ -38,15 +38,26 @@ module pci_busif(
 				 input logic [31:0]	 cfg_read_val);
 
 	// PCI bus FSM states
-	localparam						 IDLE = 4'h0;
-	localparam						 CFG_READ_WAIT_BE=4'h1;
-	localparam						 CFG_READ_WAIT_IRDY=4'h2;
-	localparam						 CFG_READ_COMP=4'h3;
+	enum							 {IDLE,
+									  CFG_READ_WAIT_BE,
+									  CFG_READ_WAIT_IRDY,
+									  CFG_READ_COMP} state, next_state;
 
 	// PCI Commands
-	localparam						 PCI_CMD_CFG_READ=4'b1010;
-	
-	reg [3:0]						 state,next_state;
+	enum [3:0]						 {
+									  PCI_CMD_INTR_ACK=4'b0000,
+									  PCI_CMD_SPECIAL_CYCLE=4'b0001,
+									  PCI_CMD_IO_READ=4'b0010,
+									  PCI_CMD_IO_WRITE=4'b0011,
+									  PCI_CMD_MEM_READ=4'b0110,
+									  PCI_CMD_MEM_WRITE=4'b0111,
+									  PCI_CMD_CFG_READ=4'b1010,
+									  PCI_CMD_CFG_WRITE=4'b1011,
+									  PCI_CMD_MEM_READ_MULTIPLE=4'b1100,
+									  PCI_CMD_DUAL_ADDR_CYCLE=4'b1101,
+									  PCI_CMD_MEM_READ_LINE=4'b1110,
+									  PCI_CMD_MEM_WRITE_INVALIDATE=4'b1111
+									  }pci_commands_t;
 
 	// AD tri state buffer
 	logic [31:0]					 ad_in,ad_out;
@@ -75,7 +86,13 @@ module pci_busif(
 	assign trdy_in=trdy;
 	assign trdy=trdy_en?trdy_out:1'bz;
 	//stop tri state logic
+	logic							 stop_in,stop_out,stop_en;
+	assign stop_in=stop;
+	assign stop=stop_en?stop_out:1'bz;
 	//lock tri state logic
+	logic							 lock_in,lock_out,lock_en;
+	assign lock_in=lock;
+	assign lock=lock_en?lock_out:1'bz;
 	//devsel tri state logic
 	logic							 devsel_in,devsel_out,devsel_en;
 	assign devsel_in=devsel;
@@ -104,6 +121,10 @@ module pci_busif(
 		trdy_out=1'b1;
 		devsel_en=1'b0;
 		devsel_out=1'b1;
+		stop_en=1'b0;
+		stop_out=1'b1;
+		lock_en=1'b0;
+		lock_out=1'b1;
 		next_state = state;
 		cfg_enable=1'b0;
 		cfg_iswrite=1'b0;
