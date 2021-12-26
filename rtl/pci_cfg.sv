@@ -45,8 +45,15 @@ module pci_cfg(// control signals
 
 	localparam					   EDU_PCI_MIN_GNT = 8'h00;
 	localparam					   EDU_PCI_MAX_LAT = 8'h00;
+
+	localparam					   EDU_PCI_MSI_CAP_CAPID = 8'h05;
+	localparam					   EDU_PCI_MSI_CAP_NEXTPTR = 8'h00;
+	localparam					   EDU_PCI_MSI_PER_VECTOR_MASK_CAPABLE = 1'b0;
+	localparam					   EDU_PCI_MSI_64BIT_ADDR_CAPABLE = 1'b1;
+	localparam					   EDU_PCI_MSI_MULTI_MSI_CAPABLE = 3'b000;
 	
 	typedef enum [5:0]			   {
+									// PCI Configuration Space header registers
 									CFG_VENDOR_DEVICE = 6'h00,
 									CFG_COMMAND_STATUS = 6'h01,
 									CFG_REV_CLASS = 6'h02,
@@ -61,7 +68,12 @@ module pci_cfg(// control signals
 									CFG_SUBSYSTEM_ID = 6'h0b,
 									CFG_ROMBAR = 6'h0c,
 									CFG_CAPPTR = 6'h0d,
-									CFG_INTR_PIN = 6'h0f
+									CFG_INTR_PIN = 6'h0f,
+									// MSI capability
+									CFG_MSI_CAPHDR_CTRL = 6'h10,
+									CFG_MSI_ADDR_LOWER = 6'h11,
+									CFG_MSI_ADDR_UPPER = 6'h12,
+									CFG_MSI_DATA = 6'h13
 									}pci_cfg_reg_t;
 	
 	reg							   command_intr_disable;
@@ -82,6 +94,11 @@ module pci_cfg(// control signals
 	reg [15:0]					   subsystem_id,subsystem_vendor_id;
 
 	reg [7:0]					   interrupt_line;
+
+	reg [2:0]					   msi_multiple_message;
+	reg							   msi_enable;
+	reg [63:2]					   msi_address;
+	reg [15:0]					   msi_data;
 	
 	always_ff @(posedge clk) begin
 		if(rst == 1'b0) begin
@@ -105,6 +122,11 @@ module pci_cfg(// control signals
 			bar0 <= 28'h0000000;
 			// reset interrupt line register
 			interrupt_line <= 8'h00;
+			// reset MSI registers
+			msi_multiple_message <= 3'b000;
+			msi_enable <= 1'b0;
+			msi_address <= 62'h00000000_00000000;
+			msi_data <= 16'h0000;
 		end else begin
 			if(cfg_enable == 1'b1) begin
 				if(cfg_iswrite == 1'b0) begin
@@ -152,13 +174,31 @@ module pci_cfg(// control signals
 												   2'b00,//32-bit space
 												   1'b0//memory space
 												   };
+						CFG_BAR1: cfg_read_val <= 32'h00000000;
+						CFG_BAR2: cfg_read_val <= 32'h00000000;
+						CFG_BAR3: cfg_read_val <= 32'h00000000;
+						CFG_BAR4: cfg_read_val <= 32'h00000000;
+						CFG_BAR5: cfg_read_val <= 32'h00000000;
+						CFG_CARDBUS_CIS: cfg_read_val <= 32'h00000000;
 						CFG_SUBSYSTEM_ID: cfg_read_val <= {subsystem_id,subsystem_vendor_id};
+						CFG_ROMBAR: cfg_read_val <= 32'h00000000;
 						CFG_CAPPTR: cfg_read_val <= {24'h000000,EDU_PCI_CAPPTR};
 						CFG_INTR_PIN: cfg_read_val <= {EDU_PCI_MAX_LAT,
 													   EDU_PCI_MIN_GNT,
 													   EDU_PCI_INTERRUPT_PIN,
 													   interrupt_line
 													   };
+						CFG_MSI_CAPHDR_CTRL: cfg_read_val <= {{7'b0000000,
+															   EDU_PCI_MSI_PER_VECTOR_MASK_CAPABLE,
+															   EDU_PCI_MSI_64BIT_ADDR_CAPABLE,
+															   msi_multiple_message,
+															   EDU_PCI_MSI_MULTI_MSI_CAPABLE,
+															   msi_enable},
+															  EDU_PCI_MSI_CAP_NEXTPTR,
+															  EDU_PCI_MSI_CAP_CAPID};
+						CFG_MSI_ADDR_LOWER: cfg_read_val <= {msi_address[31:2],2'b00};
+						CFG_MSI_ADDR_UPPER: cfg_read_val <= msi_address[63:32];
+						CFG_MSI_DATA: cfg_read_val <= {16'h0000, msi_data};
 						default: cfg_read_val <= 32'h00000000;
 					endcase // case (offset)
 				end
