@@ -119,7 +119,7 @@ module pci_cfg(// control signals
 	reg [63:2]					   msi_address;
 	reg [15:0]					   msi_data;
 	
-	always_ff @(posedge clk) begin
+	always_ff @(posedge clk, negedge rst) begin
 		if(rst == 1'b0) begin
 			// command register reset
 			command_intr_disable <= 1'b0;

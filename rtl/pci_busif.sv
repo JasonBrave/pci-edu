@@ -117,7 +117,7 @@ module pci_busif(
 	assign devsel_in=devsel;
 	assign devsel=devsel_en?devsel_out:1'bz;
 	
-	always_ff @(posedge clk) begin
+	always_ff @(posedge clk, negedge rst) begin
 		if(rst == 1'b0) begin
 			state <= IDLE;
 		end else begin
