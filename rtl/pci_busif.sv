@@ -57,10 +57,13 @@ module pci_busif(
 				 input logic [31:0]	 cfg_read_val);
 
 	// PCI bus FSM states
-	enum							 {IDLE,
+	enum							 {
+									  IDLE,
 									  CFG_READ_WAIT_BE,
 									  CFG_READ_WAIT_IRDY,
-									  CFG_READ_COMP} state, next_state;
+									  CFG_READ_COMP,
+									  CFG_WRITE_WAIT_DATA
+									  } state, next_state;
 
 	// PCI Commands
 	enum [3:0]						 {
@@ -156,6 +159,8 @@ module pci_busif(
 						next_state = CFG_READ_WAIT_BE;
 						cfg_enable = 1'b1;
 						cfg_offset=ad_in[7:2];
+					end else if((idsel == 1'b1) && (cbe_in == PCI_CMD_CFG_WRITE) && (ad_in[1:0] == 2'b00)&&(ad_in[10:8]==3'b000)) begin
+						next_state = CFG_WRITE_WAIT_DATA;
 					end
 				end
 			end
@@ -181,6 +186,15 @@ module pci_busif(
 				ad_out = cfg_read_val;
 				ad_en = 1'b1;
 				next_state = IDLE;
+			end
+			CFG_WRITE_WAIT_DATA: begin
+				if(irdy == 1'b0) begin
+					trdy_en=1'b1;
+					trdy_out=1'b0;
+					devsel_en=1'b1;
+					devsel_out=1'b0;
+					next_state = IDLE;
+				end
 			end
 			default: next_state=IDLE;
 		endcase // case (state)
