@@ -57,33 +57,35 @@ module pci_busif(
 				 input logic [31:0]	 cfg_read_val);
 
 	// PCI bus FSM states
-	enum							 {
-									  IDLE,
-									  CFG_READ_WAIT_BE,
-									  CFG_READ_WAIT_IRDY,
-									  CFG_READ_COMP,
-									  CFG_WRITE_WAIT_DATA
-									  } state, next_state;
+	typedef enum logic [3:0]							 {
+														  IDLE,
+														  CFG_READ_WAIT_BE,
+														  CFG_READ_WAIT_IRDY,
+														  CFG_READ_COMP,
+														  CFG_WRITE_WAIT_DATA
+														  } pci_fsm_state_t;
+
+	pci_fsm_state_t state, next_state;
 
 	// PCI Commands
-	enum [3:0]						 {
-									  PCI_CMD_INTR_ACK=4'b0000,
-									  PCI_CMD_SPECIAL_CYCLE=4'b0001,
-									  PCI_CMD_IO_READ=4'b0010,
-									  PCI_CMD_IO_WRITE=4'b0011,
-									  PCI_CMD_MEM_READ=4'b0110,
-									  PCI_CMD_MEM_WRITE=4'b0111,
-									  PCI_CMD_CFG_READ=4'b1010,
-									  PCI_CMD_CFG_WRITE=4'b1011,
-									  PCI_CMD_MEM_READ_MULTIPLE=4'b1100,
-									  PCI_CMD_DUAL_ADDR_CYCLE=4'b1101,
-									  PCI_CMD_MEM_READ_LINE=4'b1110,
-									  PCI_CMD_MEM_WRITE_INVALIDATE=4'b1111
-									  }pci_commands_t;
+	typedef enum logic [3:0]						 {
+													  PCI_CMD_INTR_ACK=4'b0000,
+													  PCI_CMD_SPECIAL_CYCLE=4'b0001,
+													  PCI_CMD_IO_READ=4'b0010,
+													  PCI_CMD_IO_WRITE=4'b0011,
+													  PCI_CMD_MEM_READ=4'b0110,
+													  PCI_CMD_MEM_WRITE=4'b0111,
+													  PCI_CMD_CFG_READ=4'b1010,
+													  PCI_CMD_CFG_WRITE=4'b1011,
+													  PCI_CMD_MEM_READ_MULTIPLE=4'b1100,
+													  PCI_CMD_DUAL_ADDR_CYCLE=4'b1101,
+													  PCI_CMD_MEM_READ_LINE=4'b1110,
+													  PCI_CMD_MEM_WRITE_INVALIDATE=4'b1111
+													  }pci_commands_t;
 
 	// AD tri state buffer
-	logic [31:0]					 ad_in,ad_out;
-	logic							 ad_en;
+	logic [31:0] ad_in,ad_out;
+	logic		 ad_en;
 	assign ad_in = ad;
 	assign ad = ad_en ? ad_out : 32'hzzzzzzzz;
 	// C/BE tri state buffer

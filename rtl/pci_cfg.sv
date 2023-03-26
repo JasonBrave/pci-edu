@@ -71,53 +71,53 @@ module pci_cfg(// control signals
 	localparam					   EDU_PCI_MSI_64BIT_ADDR_CAPABLE = 1'b1;
 	localparam					   EDU_PCI_MSI_MULTI_MSI_CAPABLE = 3'b000;
 	
-	typedef enum [5:0]			   {
-									// PCI Configuration Space header registers
-									CFG_VENDOR_DEVICE = 6'h00,
-									CFG_COMMAND_STATUS = 6'h01,
-									CFG_REV_CLASS = 6'h02,
-									CFG_CACHE_LATTIMER_HDRTYPE_BIST = 6'h03,
-									CFG_BAR0 = 6'h04,
-									CFG_BAR1 = 6'h05,
-									CFG_BAR2 = 6'h06,
-									CFG_BAR3 = 6'h07,
-									CFG_BAR4 = 6'h08,
-									CFG_BAR5 = 6'h09,
-									CFG_CARDBUS_CIS = 6'h0a,
-									CFG_SUBSYSTEM_ID = 6'h0b,
-									CFG_ROMBAR = 6'h0c,
-									CFG_CAPPTR = 6'h0d,
-									CFG_INTR_PIN = 6'h0f,
-									// MSI capability
-									CFG_MSI_CAPHDR_CTRL = 6'h10,
-									CFG_MSI_ADDR_LOWER = 6'h11,
-									CFG_MSI_ADDR_UPPER = 6'h12,
-									CFG_MSI_DATA = 6'h13
-									}pci_cfg_reg_t;
+	typedef enum logic [5:0]			   {
+											// PCI Configuration Space header registers
+											CFG_VENDOR_DEVICE = 6'h00,
+											CFG_COMMAND_STATUS = 6'h01,
+											CFG_REV_CLASS = 6'h02,
+											CFG_CACHE_LATTIMER_HDRTYPE_BIST = 6'h03,
+											CFG_BAR0 = 6'h04,
+											CFG_BAR1 = 6'h05,
+											CFG_BAR2 = 6'h06,
+											CFG_BAR3 = 6'h07,
+											CFG_BAR4 = 6'h08,
+											CFG_BAR5 = 6'h09,
+											CFG_CARDBUS_CIS = 6'h0a,
+											CFG_SUBSYSTEM_ID = 6'h0b,
+											CFG_ROMBAR = 6'h0c,
+											CFG_CAPPTR = 6'h0d,
+											CFG_INTR_PIN = 6'h0f,
+											// MSI capability
+											CFG_MSI_CAPHDR_CTRL = 6'h10,
+											CFG_MSI_ADDR_LOWER = 6'h11,
+											CFG_MSI_ADDR_UPPER = 6'h12,
+											CFG_MSI_DATA = 6'h13
+											}pci_cfg_reg_t;
 	
-	reg							   command_intr_disable;
-	reg							   command_fast_b2b;
-	reg							   command_serr_enable;
-	reg							   command_perr_response;
-	reg							   command_memwr_invalidate;
-	reg							   command_special_cycles;
-	reg							   command_bus_master;
-	reg							   command_memory_space;
-	reg							   command_io_space;
+	reg			 command_intr_disable;
+	reg			 command_fast_b2b;
+	reg			 command_serr_enable;
+	reg			 command_perr_response;
+	reg			 command_memwr_invalidate;
+	reg			 command_special_cycles;
+	reg			 command_bus_master;
+	reg			 command_memory_space;
+	reg			 command_io_space;
 
-	reg [7:0]					   cacheline_size;
-	reg [7:3]					   latency_timer;							   
+	reg [7:0]	 cacheline_size;
+	reg [7:3]	 latency_timer;
 
-	reg [31:4]					   bar0;
+	reg [31:4]	 bar0;
 	
-	reg [15:0]					   subsystem_id,subsystem_vendor_id;
+	reg [15:0]	 subsystem_id,subsystem_vendor_id;
 
-	reg [7:0]					   interrupt_line;
+	reg [7:0]	 interrupt_line;
 
-	reg [2:0]					   msi_multiple_message;
-	reg							   msi_enable;
-	reg [63:2]					   msi_address;
-	reg [15:0]					   msi_data;
+	reg [2:0]	 msi_multiple_message;
+	reg			 msi_enable;
+	reg [63:2]	 msi_address;
+	reg [15:0]	 msi_data;
 	
 	always_ff @(posedge clk, negedge rst) begin
 		if(rst == 1'b0) begin
