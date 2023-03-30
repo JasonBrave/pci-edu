@@ -23,19 +23,39 @@
 
 module pci_busif(
 				 //address and data
-				 inout logic [31:0]	 ad,
-				 inout logic [3:0]	 cbe,
-				 inout logic		 par,
+				 input logic [31:0]	 ad_in,
+				 output logic [31:0] ad_out,
+				 output logic		 ad_en,
+				 input logic [3:0]	 cbe_in,
+				 output logic [3:0]	 cbe_out,
+				 output logic		 cbe_en,
+				 input logic		 par_in,
+				 output logic		 par_out,
+				 output logic		 par_en,
 				 //interface control
-				 inout logic		 frame,
-				 inout logic		 trdy,
-				 inout logic		 irdy,
-				 inout logic		 stop,
-				 inout logic		 devsel,
+				 input logic		 frame_in,
+				 output logic		 frame_out,
+				 output logic		 frame_en,
+				 input logic		 trdy_in,
+				 output logic		 trdy_out,
+				 output logic		 trdy_en,
+				 input logic		 irdy_in,
+				 output logic		 irdy_out,
+				 output logic		 irdy_en,
+				 input logic		 stop_in,
+				 output logic		 stop_out,
+				 output logic		 stop_en,
+				 input logic		 devsel_in,
+				 output logic		 devsel_out,
+				 output logic		 devsel_en,
 				 input logic		 idsel,
 				 //error reporting
-				 inout logic		 perr,
-				 inout logic		 serr,
+				 input logic		 perr_in,
+				 output logic		 perr_out,
+				 output logic		 perr_en,
+				 input logic		 serr_in,
+				 output logic		 serr_out,
+				 output logic		 serr_en,
 				 //arbitration
 				 output logic		 req,
 				 input logic		 gnt,
@@ -43,7 +63,9 @@ module pci_busif(
 				 input logic		 clk,
 				 input logic		 rst,
 				 //interface control
-				 inout logic		 lock,
+				 input logic		 lock_in,
+				 output logic		 lock_out,
+				 output logic		 lock_en,
 				 //interrupts
 				 output logic		 inta,
 				 output logic		 intb,
@@ -83,45 +105,6 @@ module pci_busif(
 													  PCI_CMD_MEM_WRITE_INVALIDATE=4'b1111
 													  }pci_commands_t;
 
-	// AD tri state buffer
-	logic [31:0] ad_in,ad_out;
-	logic		 ad_en;
-	assign ad_in = ad;
-	assign ad = ad_en ? ad_out : 32'hzzzzzzzz;
-	// C/BE tri state buffer
-	logic [3:0]						 cbe_in,cbe_out;
-	logic							 cbe_en;
-	assign cbe_in=cbe;
-	assign cbe = cbe_en?cbe_out:4'bzzzz;
-	//parity tri state logic
-	logic							 par_in,par_out,par_en;
-	assign par_in=par;
-	assign par=par_en?par_out:1'bz;
-	//frame tri state logic
-	logic							 frame_in,frame_out,frame_en;
-	assign frame_in=frame;
-	assign frame=frame_en?frame_out:1'bz;
-	//irdy tri state logic
-	logic							 irdy_in,irdy_out,irdy_en;
-	assign irdy_in=irdy;
-	assign irdy=irdy_en?irdy_out:1'bz;
-	//trdy tri state logic
-	logic							 trdy_in,trdy_out,trdy_en;
-	assign trdy_in=trdy;
-	assign trdy=trdy_en?trdy_out:1'bz;
-	//stop tri state logic
-	logic							 stop_in,stop_out,stop_en;
-	assign stop_in=stop;
-	assign stop=stop_en?stop_out:1'bz;
-	//lock tri state logic
-	logic							 lock_in,lock_out,lock_en;
-	assign lock_in=lock;
-	assign lock=lock_en?lock_out:1'bz;
-	//devsel tri state logic
-	logic							 devsel_in,devsel_out,devsel_en;
-	assign devsel_in=devsel;
-	assign devsel=devsel_en?devsel_out:1'bz;
-	
 	always_ff @(posedge clk, negedge rst) begin
 		if(rst == 1'b0) begin
 			state <= IDLE;
@@ -149,6 +132,10 @@ module pci_busif(
 		stop_out=1'b1;
 		lock_en=1'b0;
 		lock_out=1'b1;
+		perr_en=1'b0;
+		perr_out=1'b0;
+		serr_en=1'b0;
+		serr_out=1'b0;
 		next_state = state;
 		cfg_enable=1'b0;
 		cfg_iswrite=1'b0;
@@ -156,7 +143,7 @@ module pci_busif(
 		cfg_write_val=32'h0000000;
 		case(state)
 			IDLE: begin
-				if(frame==1'b0) begin
+				if(frame_in==1'b0) begin
 					if((idsel == 1'b1) && (cbe_in == PCI_CMD_CFG_READ) && (ad_in[1:0] == 2'b00)&&(ad_in[10:8]==3'b000)) begin
 						next_state = CFG_READ_WAIT_BE;
 						cfg_enable = 1'b1;
@@ -170,7 +157,7 @@ module pci_busif(
 				next_state=CFG_READ_WAIT_IRDY;
 			end
 			CFG_READ_WAIT_IRDY: begin
-				if(irdy == 1'b0) begin
+				if(irdy_in == 1'b0) begin
 					trdy_en=1'b1;
 					trdy_out=1'b0;
 					devsel_en=1'b1;
@@ -190,7 +177,7 @@ module pci_busif(
 				next_state = IDLE;
 			end
 			CFG_WRITE_WAIT_DATA: begin
-				if(irdy == 1'b0) begin
+				if(irdy_in == 1'b0) begin
 					trdy_en=1'b1;
 					trdy_out=1'b0;
 					devsel_en=1'b1;
@@ -203,11 +190,11 @@ module pci_busif(
 	end
 	
 	//drive interrupt lines
-	assign inta = 1'bz;
-	assign intb = 1'bz;
-	assign intc = 1'bz;
-	assign intd = 1'bz;
+	assign inta = 1'b0;
+	assign intb = 1'b0;
+	assign intc = 1'b0;
+	assign intd = 1'b0;
 	//drive master request line
-	assign req = 1'bz;
+	assign req = 1'b0;
 	
 endmodule // pci_busif

@@ -23,75 +23,99 @@
 
 module edu_verilator_wrapper(
 							 //address and data
-							 input logic [31:0]	 ad_in,
-							 input logic		 ad_in_en,
-							 output logic [31:0] ad_out,
-							 input logic [3:0]	 cbe_in,
-							 input logic		 cbe_in_en,
-							 output logic [3:0]	 cbe_out,
-							 inout logic		 par,
-							 //interface control
-							 inout logic		 frame,
-							 inout logic		 trdy,
-							 inout logic		 irdy,
-							 inout logic		 stop,
-							 inout logic		 devsel,
-							 input logic		 idsel,
-							 //error reporting
-							 inout logic		 perr,
-							 inout logic		 serr,
-							 //arbitration
-							 output logic		 req,
-							 input logic		 gnt,
-							 //system
-							 input logic		 clk,
-							 input logic		 rst,
-							 //interface control
-							 inout logic		 lock,
-							 //interrupts
-							 output logic		 inta,
-							 output logic		 intb,
-							 output logic		 intc,
-							 output logic		 intd);
-
-	// AD tristate
-	logic [31:0]								 ad;
-	assign ad_out=ad;
-	assign ad=ad_in_en?ad_in:32'hzzzzzzzz;
-	// C/BE tristate
-	logic [3:0]									 cbe;
-	assign cbe_out=cbe;
-	assign cbe=cbe_in_en?cbe_in:4'bzzzz;
-
-`ifdef VERILATOR
-	pullup(frame);
-	pullup(irdy);
-	pullup(trdy);
-	pullup(stop);
-	pullup(lock);
-	pullup(devsel);
-	pullup(perr);
-`endif
+		   input logic [31:0]  ad_in,
+		   output logic [31:0] ad_out,
+		   output logic		   ad_en,
+		   input logic [3:0]   cbe_in,
+		   output logic [3:0]  cbe_out,
+		   output logic		   cbe_en,
+		   input logic		   par_in,
+		   output logic		   par_out,
+		   output logic		   par_en,
+		   //interface control
+		   input logic		   frame_in,
+		   output logic		   frame_out,
+		   output logic		   frame_en,
+		   input logic		   trdy_in,
+		   output logic		   trdy_out,
+		   output logic		   trdy_en,
+		   input logic		   irdy_in,
+		   output logic		   irdy_out,
+		   output logic		   irdy_en,
+		   input logic		   stop_in,
+		   output logic		   stop_out,
+		   output logic		   stop_en,
+		   input logic		   devsel_in,
+		   output logic		   devsel_out,
+		   output logic		   devsel_en,
+		   input logic		   idsel,
+		   //error reporting
+		   input logic		   perr_in,
+		   output logic		   perr_out,
+		   output logic		   perr_en,
+		   input logic		   serr_in,
+		   output logic		   serr_out,
+		   output logic		   serr_en,
+		   //arbitration
+		   output logic		   req,
+		   input logic		   gnt,
+		   //system
+		   input logic		   clk,
+		   input logic		   rst,
+		   //interface control
+		   input logic		   lock_in,
+		   output logic		   lock_out,
+		   output logic		   lock_en,
+		   //interrupts
+		   output logic		   inta,
+		   output logic		   intb,
+		   output logic		   intc,
+		   output logic		   intd/*AUTOARG*/);
 	
 	edu pci_edu_device(
-					   .ad(ad),
-					   .cbe(cbe),
-					   .par(par),
-					   .frame(frame),
-					   .trdy(trdy),
-					   .irdy(irdy),
-					   .stop(stop),
-					   .devsel(devsel),
-					   .idsel(idsel),
-					   .perr(perr),
-					   .serr(serr),
-					   .req(req),
-					   .gnt(gnt),
-					   .clk(clk),
-					   .rst(rst),
-					   .lock(lock),
-					   .inta(inta),
-					   .intb(intb),
-					   .intc(intc),
-					   .intd(intd));
+					   /*AUTOINST*/
+					   // Outputs
+					   .ad_out			(ad_out[31:0]),
+					   .ad_en			(ad_en),
+					   .cbe_out			(cbe_out[3:0]),
+					   .cbe_en			(cbe_en),
+					   .par_out			(par_out),
+					   .par_en			(par_en),
+					   .frame_out		(frame_out),
+					   .frame_en		(frame_en),
+					   .trdy_out		(trdy_out),
+					   .trdy_en			(trdy_en),
+					   .irdy_out		(irdy_out),
+					   .irdy_en			(irdy_en),
+					   .stop_out		(stop_out),
+					   .stop_en			(stop_en),
+					   .devsel_out		(devsel_out),
+					   .devsel_en		(devsel_en),
+					   .perr_out		(perr_out),
+					   .perr_en			(perr_en),
+					   .serr_out		(serr_out),
+					   .serr_en			(serr_en),
+					   .req				(req),
+					   .lock_out		(lock_out),
+					   .lock_en			(lock_en),
+					   .inta			(inta),
+					   .intb			(intb),
+					   .intc			(intc),
+					   .intd			(intd),
+					   // Inputs
+					   .ad_in			(ad_in[31:0]),
+					   .cbe_in			(cbe_in[3:0]),
+					   .par_in			(par_in),
+					   .frame_in		(frame_in),
+					   .trdy_in			(trdy_in),
+					   .irdy_in			(irdy_in),
+					   .stop_in			(stop_in),
+					   .devsel_in		(devsel_in),
+					   .idsel			(idsel),
+					   .perr_in			(perr_in),
+					   .serr_in			(serr_in),
+					   .gnt				(gnt),
+					   .clk				(clk),
+					   .rst				(rst),
+					   .lock_in			(lock_in));
 endmodule // edu_verilator_wrapper
