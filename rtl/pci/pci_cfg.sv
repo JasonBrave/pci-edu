@@ -21,6 +21,8 @@
 
 `default_nettype none
 
+import pci_pkg::pci_cfg_reg_offset;
+
 module pci_cfg
   #(
 	parameter PCI_VENDOR_ID = 16'h1234,
@@ -69,30 +71,6 @@ module pci_cfg
 	localparam	 PCI_MSI_PER_VECTOR_MASK_CAPABLE = 1'b0;
 	localparam	 PCI_MSI_64BIT_ADDR_CAPABLE = 1'b1;
 	localparam	 PCI_MSI_MULTI_MSI_CAPABLE = 3'b000;
-
-	typedef enum logic [5:0] {
-							  // PCI Configuration Space header registers
-							  CFG_VENDOR_DEVICE = 6'h00,
-							  CFG_COMMAND_STATUS = 6'h01,
-							  CFG_REV_CLASS = 6'h02,
-							  CFG_CACHE_LATTIMER_HDRTYPE_BIST = 6'h03,
-							  CFG_BAR0 = 6'h04,
-							  CFG_BAR1 = 6'h05,
-							  CFG_BAR2 = 6'h06,
-							  CFG_BAR3 = 6'h07,
-							  CFG_BAR4 = 6'h08,
-							  CFG_BAR5 = 6'h09,
-							  CFG_CARDBUS_CIS = 6'h0a,
-							  CFG_SUBSYSTEM_ID = 6'h0b,
-							  CFG_ROMBAR = 6'h0c,
-							  CFG_CAPPTR = 6'h0d,
-							  CFG_INTR_PIN = 6'h0f,
-							  // MSI capability
-							  CFG_MSI_CAPHDR_CTRL = 6'h10,
-							  CFG_MSI_ADDR_LOWER = 6'h11,
-							  CFG_MSI_ADDR_UPPER = 6'h12,
-							  CFG_MSI_DATA = 6'h13
-							  } pci_cfg_reg_t;
 
 	reg			 command_intr_disable;
 	reg			 command_fast_b2b;
@@ -149,74 +127,74 @@ module pci_cfg
 			if(cfg_enable == 1'b1) begin
 				if(cfg_iswrite == 1'b0) begin
 					case(cfg_offset)
-						CFG_VENDOR_DEVICE: cfg_read_val <= {PCI_DEVICE_ID,PCI_VENDOR_ID};
-						CFG_COMMAND_STATUS: cfg_read_val <= {{
-															  detected_parity_error,
-															  signaled_system_error,
-															  received_master_abort,
-															  received_target_abort,
-															  signaled_target_abort,
-															  PCI_DEVSEL_TIMING,
-															  master_data_parity_error,
-															  PCI_CAPABLE_FASTB2B,
-															  1'b0,//reserved
-															  PCI_CAPABLE_66MHZ,
-															  PCI_IMPLEMENT_CAPABILITIES,
-															  intr_status,
-															  3'b000//reserved
-															  },{
-																 5'b00000,//reserved
-																 command_intr_disable,
-																 command_fast_b2b,
-																 command_serr_enable,
-																 1'b0,//reserved
-																 command_perr_response,
-																 1'b0,// VGA palette snooping not implemented
-																 command_memwr_invalidate,
-																 command_special_cycles,
-																 command_bus_master,
-																 command_memory_space,
-																 command_io_space//implement this bit, although this device does not use IO space
-																 }};
-						CFG_REV_CLASS: cfg_read_val <= {PCI_CLASS,
-														PCI_SUBCLASS,
-														PCI_PROGIF,
-														PCI_REVISION};
-						CFG_CACHE_LATTIMER_HDRTYPE_BIST: cfg_read_val <= {8'h00,//BIST not implemented
-																		  {PCI_MULTIFUNCTION,PCI_HEADER_TYPE},//header type
-																		  {latency_timer,3'b000},//latency timer 
-																		  cacheline_size// cacheine size 
-																		  };
-						CFG_BAR0: cfg_read_val <= {bar0,
-												   1'b0,//not prefetchable
-												   2'b00,//32-bit space
-												   1'b0//memory space
-												   };
-						CFG_BAR1: cfg_read_val <= 32'h00000000;
-						CFG_BAR2: cfg_read_val <= 32'h00000000;
-						CFG_BAR3: cfg_read_val <= 32'h00000000;
-						CFG_BAR4: cfg_read_val <= 32'h00000000;
-						CFG_BAR5: cfg_read_val <= 32'h00000000;
-						CFG_CARDBUS_CIS: cfg_read_val <= 32'h00000000;
-						CFG_SUBSYSTEM_ID: cfg_read_val <= {subsystem_id,subsystem_vendor_id};
-						CFG_ROMBAR: cfg_read_val <= 32'h00000000;
-						CFG_CAPPTR: cfg_read_val <= {24'h000000,PCI_CAPPTR};
-						CFG_INTR_PIN: cfg_read_val <= {PCI_MAX_LAT,
-													   PCI_MIN_GNT,
-													   PCI_INTERRUPT_PIN,
-													   interrupt_line
-													   };
-						CFG_MSI_CAPHDR_CTRL: cfg_read_val <= {{7'b0000000,
-															   PCI_MSI_PER_VECTOR_MASK_CAPABLE,
-															   PCI_MSI_64BIT_ADDR_CAPABLE,
-															   msi_multiple_message,
-															   PCI_MSI_MULTI_MSI_CAPABLE,
-															   msi_enable},
-															  PCI_MSI_CAP_NEXTPTR,
-															  PCI_MSI_CAP_CAPID};
-						CFG_MSI_ADDR_LOWER: cfg_read_val <= {msi_address[31:2],2'b00};
-						CFG_MSI_ADDR_UPPER: cfg_read_val <= msi_address[63:32];
-						CFG_MSI_DATA: cfg_read_val <= {16'h0000, msi_data};
+						pci_pkg::CFG_VENDOR_DEVICE: cfg_read_val <= {PCI_DEVICE_ID,PCI_VENDOR_ID};
+						pci_pkg::CFG_COMMAND_STATUS: cfg_read_val <= {{
+																	   detected_parity_error,
+																	   signaled_system_error,
+																	   received_master_abort,
+																	   received_target_abort,
+																	   signaled_target_abort,
+																	   PCI_DEVSEL_TIMING,
+																	   master_data_parity_error,
+																	   PCI_CAPABLE_FASTB2B,
+																	   1'b0,//reserved
+																	   PCI_CAPABLE_66MHZ,
+																	   PCI_IMPLEMENT_CAPABILITIES,
+																	   intr_status,
+																	   3'b000//reserved
+																	   },{
+																		  5'b00000,//reserved
+																		  command_intr_disable,
+																		  command_fast_b2b,
+																		  command_serr_enable,
+																		  1'b0,//reserved
+																		  command_perr_response,
+																		  1'b0,// VGA palette snooping not implemented
+																		  command_memwr_invalidate,
+																		  command_special_cycles,
+																		  command_bus_master,
+																		  command_memory_space,
+																		  command_io_space//implement this bit, although this device does not use IO space
+																		  }};
+						pci_pkg::CFG_REV_CLASS: cfg_read_val <= {PCI_CLASS,
+																 PCI_SUBCLASS,
+																 PCI_PROGIF,
+																 PCI_REVISION};
+						pci_pkg::CFG_CACHE_LATTIMER_HDRTYPE_BIST: cfg_read_val <= {8'h00,//BIST not implemented
+																				   {PCI_MULTIFUNCTION,PCI_HEADER_TYPE},//header type
+																				   {latency_timer,3'b000},//latency timer 
+																				   cacheline_size// cacheine size 
+																				   };
+						pci_pkg::CFG_BAR0: cfg_read_val <= {bar0,
+															1'b0,//not prefetchable
+															2'b00,//32-bit space
+															1'b0//memory space
+															};
+						pci_pkg::CFG_BAR1: cfg_read_val <= 32'h00000000;
+						pci_pkg::CFG_BAR2: cfg_read_val <= 32'h00000000;
+						pci_pkg::CFG_BAR3: cfg_read_val <= 32'h00000000;
+						pci_pkg::CFG_BAR4: cfg_read_val <= 32'h00000000;
+						pci_pkg::CFG_BAR5: cfg_read_val <= 32'h00000000;
+						pci_pkg::CFG_CARDBUS_CIS: cfg_read_val <= 32'h00000000;
+						pci_pkg::CFG_SUBSYSTEM_ID: cfg_read_val <= {subsystem_id,subsystem_vendor_id};
+						pci_pkg::CFG_ROMBAR: cfg_read_val <= 32'h00000000;
+						pci_pkg::CFG_CAPPTR: cfg_read_val <= {24'h000000,PCI_CAPPTR};
+						pci_pkg::CFG_INTR_PIN: cfg_read_val <= {PCI_MAX_LAT,
+																PCI_MIN_GNT,
+																PCI_INTERRUPT_PIN,
+																interrupt_line
+																};
+						pci_pkg::CFG_MSI_CAPHDR_CTRL: cfg_read_val <= {{7'b0000000,
+																		PCI_MSI_PER_VECTOR_MASK_CAPABLE,
+																		PCI_MSI_64BIT_ADDR_CAPABLE,
+																		msi_multiple_message,
+																		PCI_MSI_MULTI_MSI_CAPABLE,
+																		msi_enable},
+																	   PCI_MSI_CAP_NEXTPTR,
+																	   PCI_MSI_CAP_CAPID};
+						pci_pkg::CFG_MSI_ADDR_LOWER: cfg_read_val <= {msi_address[31:2],2'b00};
+						pci_pkg::CFG_MSI_ADDR_UPPER: cfg_read_val <= msi_address[63:32];
+						pci_pkg::CFG_MSI_DATA: cfg_read_val <= {16'h0000, msi_data};
 						default: cfg_read_val <= 32'h00000000;
 					endcase // case (offset)
 				end
