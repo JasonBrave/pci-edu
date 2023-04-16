@@ -18,6 +18,7 @@
  */
 
 /* verilator lint_off UNUSED */
+/* verilator lint_off PINCONNECTEMPTY */
 
 `default_nettype none
 
@@ -141,12 +142,15 @@ module pci(
 									/*AUTOINST*/
 									// Outputs
 									.cfg_read_val		(cfg_read_val[31:0]),
+									.cfg_done			(),
+									.cfg_w_err			(),
 									// Inputs
 									.clk				(clk),
 									.rst				(rst),
 									.cfg_enable			(cfg_enable),
 									.cfg_iswrite		(cfg_iswrite),
 									.cfg_offset			(cfg_offset[5:0]),
-									.cfg_write_val		(cfg_write_val[31:0]));
+									.cfg_write_val		(cfg_write_val[31:0]),
+									.cfg_be				(4'b1111));
 	
 endmodule // pci

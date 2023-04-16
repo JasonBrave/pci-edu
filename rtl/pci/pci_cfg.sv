@@ -17,8 +17,6 @@
  * along with PCI Edu device.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-/* verilator lint_off UNUSED */
-
 `default_nettype none
 
 import pci_pkg::pci_cfg_reg_offset;
@@ -41,7 +39,10 @@ module pci_cfg
 	 input logic		 cfg_iswrite,
 	 input logic [5:0]	 cfg_offset,
 	 input logic [31:0]	 cfg_write_val,
+	 input logic [3:0]	 cfg_be,
 	 output logic [31:0] cfg_read_val,
+	 output logic		 cfg_done,
+	 output logic		 cfg_w_err,
 	 // status signals
 	 input logic		 intr_status,
 	 input logic		 master_data_parity_error,
@@ -123,6 +124,9 @@ module pci_cfg
 			msi_enable <= 1'b0;
 			msi_address <= 62'h00000000_00000000;
 			msi_data <= 16'h0000;
+
+			cfg_done <= 1'b0;
+			cfg_w_err <= 1'b0;
 		end else begin
 			if(cfg_enable == 1'b1) begin
 				if(cfg_iswrite == 1'b0) begin
@@ -197,8 +201,109 @@ module pci_cfg
 						pci_pkg::CFG_MSI_DATA: cfg_read_val <= {16'h0000, msi_data};
 						default: cfg_read_val <= 32'h00000000;
 					endcase // case (offset)
+					cfg_done <= 1'b1;
+				end else begin // if (cfg_iswrite == 1'b0)
+					case(cfg_offset)
+						pci_pkg::CFG_VENDOR_DEVICE: cfg_w_err <= 1'b1;
+						pci_pkg::CFG_COMMAND_STATUS: begin
+							if(cfg_be[0]) begin
+								command_io_space <= cfg_write_val[0];
+								command_io_space <= cfg_write_val[1];
+								command_bus_master <= cfg_write_val[2];
+								command_special_cycles <= cfg_write_val[3];
+								command_memwr_invalidate <= cfg_write_val[4];
+								command_perr_response <= cfg_write_val[6];
+							end
+							if(cfg_be[1]) begin
+								command_serr_enable <= cfg_write_val[8];
+								command_fast_b2b <= cfg_write_val[9];
+								command_intr_disable <= cfg_write_val[10];
+							end
+						end
+						pci_pkg::CFG_REV_CLASS: cfg_w_err <= 1'b1;
+						pci_pkg::CFG_CACHE_LATTIMER_HDRTYPE_BIST: begin
+							if(cfg_be[0]) begin
+								cacheline_size <= cfg_write_val[7:0];
+							end
+							if(cfg_be[1]) begin
+								latency_timer <= cfg_write_val[15:11];
+							end
+						end
+						pci_pkg::CFG_BAR0: begin
+							if(cfg_be != 4'b1111) begin
+								cfg_w_err <= 1'b1;
+							end else begin
+								bar0 <= cfg_write_val[31:4];
+							end
+						end
+						pci_pkg::CFG_BAR1: begin
+						end
+						pci_pkg::CFG_BAR2: begin
+						end
+						pci_pkg::CFG_BAR3: begin
+						end
+						pci_pkg::CFG_BAR4: begin
+						end
+						pci_pkg::CFG_BAR5: begin
+						end
+						pci_pkg::CFG_CARDBUS_CIS: begin
+						end
+						pci_pkg::CFG_SUBSYSTEM_ID: begin
+							if(cfg_be[1:0] == 2'b11) begin
+								subsystem_vendor_id <= cfg_write_val[15:0];
+							end
+							if(cfg_be[3:2] == 2'b11) begin
+								subsystem_id <= cfg_write_val[31:16];
+							end
+							if(((^cfg_be[1:0]) == 1'b1) || ((^cfg_be[3:2]) == 1'b1)) begin
+								cfg_w_err <= 1'b1;
+							end
+						end // case: pci_pkg::CFG_SUBSYSTEM_ID
+						pci_pkg::CFG_ROMBAR: begin
+						end
+						pci_pkg::CFG_CAPPTR: begin
+							cfg_w_err <= 1'b1;
+						end
+						pci_pkg::CFG_INTR_PIN: begin
+							if(cfg_be[0] == 1'b1) begin
+								interrupt_line <= cfg_write_val[7:0];
+							end
+						end
+						pci_pkg::CFG_MSI_CAPHDR_CTRL: begin
+							if(cfg_be[2] == 1'b1) begin
+								msi_enable <= cfg_write_val[16];
+								msi_multiple_message[2:0] <= cfg_write_val[22:20];
+							end
+						end
+						pci_pkg::CFG_MSI_ADDR_LOWER: begin
+							if(cfg_be == 4'b1111) begin
+								msi_address[31:2] <= cfg_write_val[31:2];
+							end
+						end
+						pci_pkg::CFG_MSI_ADDR_UPPER: begin
+							if(cfg_be == 4'b1111) begin
+								msi_address[63:32] <= cfg_write_val[31:0];
+							end
+						end
+						pci_pkg::CFG_MSI_DATA: begin
+							if(cfg_be[1:0] == 2'b11) begin
+								msi_data <= cfg_write_val[15:0];
+							end
+						end
+						default: begin
+						end
+					endcase // case (cfg_offset)
+					cfg_done <= 1'b1;
+				end // else: !if(cfg_iswrite == 1'b0)
+			end else begin // if (cfg_enable == 1'b1)
+				if(cfg_done == 1'b1) begin
+					cfg_done <= 1'b0;
 				end
-			end // if (cfg_enable == 1'b1)
+				if(cfg_w_err == 1'b1) begin
+					cfg_w_err <= 1'b0;
+				end
+			end
+
 		end // else: !if(rst = 1'b0)
 	end
 
