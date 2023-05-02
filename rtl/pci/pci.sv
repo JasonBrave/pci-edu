@@ -17,9 +17,6 @@
  * along with PCI Edu device.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-/* verilator lint_off UNUSED */
-/* verilator lint_off PINCONNECTEMPTY */
-
 `default_nettype none
 
 module pci(
@@ -77,7 +74,10 @@ module pci(
 	logic					  cfg_iswrite;
 	logic [5:0]				  cfg_offset;
 	logic [31:0]			  cfg_write_val;
+	logic [3:0]				  cfg_be;
 	logic [31:0]			  cfg_read_val;
+	logic					  cfg_done;
+	logic					  cfg_w_err;
 
 	pci_busif pci_bus_interface(
 								/*AUTOINST*/
@@ -113,6 +113,7 @@ module pci(
 								.cfg_iswrite	(cfg_iswrite),
 								.cfg_offset		(cfg_offset[5:0]),
 								.cfg_write_val	(cfg_write_val[31:0]),
+								.cfg_be			(cfg_be[3:0]),
 								// Inputs
 								.ad_in			(ad_in[31:0]),
 								.cbe_in			(cbe_in[3:0]),
@@ -129,7 +130,9 @@ module pci(
 								.clk			(clk),
 								.rst			(rst),
 								.lock_in		(lock_in),
-								.cfg_read_val	(cfg_read_val[31:0]));
+								.cfg_read_val	(cfg_read_val[31:0]),
+								.cfg_done		(cfg_done),
+								.cfg_w_err		(cfg_w_err));
 	
 	pci_cfg pci_configuration_space(
 									.intr_status(1'b0),
@@ -142,8 +145,8 @@ module pci(
 									/*AUTOINST*/
 									// Outputs
 									.cfg_read_val		(cfg_read_val[31:0]),
-									.cfg_done			(),
-									.cfg_w_err			(),
+									.cfg_done			(cfg_done),
+									.cfg_w_err			(cfg_w_err),
 									// Inputs
 									.clk				(clk),
 									.rst				(rst),
@@ -151,6 +154,6 @@ module pci(
 									.cfg_iswrite		(cfg_iswrite),
 									.cfg_offset			(cfg_offset[5:0]),
 									.cfg_write_val		(cfg_write_val[31:0]),
-									.cfg_be				(4'b1111));
+									.cfg_be				(cfg_be[3:0]));
 	
 endmodule // pci

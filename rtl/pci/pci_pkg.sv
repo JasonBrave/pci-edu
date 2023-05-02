@@ -1,7 +1,23 @@
 package pci_pkg;
 
+	// PCI Commands
+	typedef enum logic [3:0] {
+							  PCI_CMD_INTR_ACK=4'b0000,
+							  PCI_CMD_SPECIAL_CYCLE=4'b0001,
+							  PCI_CMD_IO_READ=4'b0010,
+							  PCI_CMD_IO_WRITE=4'b0011,
+							  PCI_CMD_MEM_READ=4'b0110,
+							  PCI_CMD_MEM_WRITE=4'b0111,
+							  PCI_CMD_CFG_READ=4'b1010,
+							  PCI_CMD_CFG_WRITE=4'b1011,
+							  PCI_CMD_MEM_READ_MULTIPLE=4'b1100,
+							  PCI_CMD_DUAL_ADDR_CYCLE=4'b1101,
+							  PCI_CMD_MEM_READ_LINE=4'b1110,
+							  PCI_CMD_MEM_WRITE_INVALIDATE=4'b1111
+							  } pci_commands_t;
+
+	// PCI Configuration Space header registers
 	typedef enum logic [5:0] {
-							  // PCI Configuration Space header registers
 							  CFG_VENDOR_DEVICE = 6'h00,
 							  CFG_COMMAND_STATUS = 6'h01,
 							  CFG_REV_CLASS = 6'h02,
@@ -23,5 +39,5 @@ package pci_pkg;
 							  CFG_MSI_ADDR_UPPER = 6'h12,
 							  CFG_MSI_DATA = 6'h13
 							  } pci_cfg_reg_offset;
-	
+
 endpackage
