@@ -79,6 +79,11 @@ module pci(
 	logic					  cfg_done;
 	logic					  cfg_w_err;
 
+	// register interconnect
+	logic					  parity_error_detected;
+	logic					  parity_error_response_reg;
+	logic					  serr_enable_reg;
+	
 	pci_busif pci_bus_interface(
 								/*AUTOINST*/
 								// Outputs
@@ -114,6 +119,7 @@ module pci(
 								.cfg_offset		(cfg_offset[5:0]),
 								.cfg_write_val	(cfg_write_val[31:0]),
 								.cfg_be			(cfg_be[3:0]),
+								.parity_error_detected(parity_error_detected),
 								// Inputs
 								.ad_in			(ad_in[31:0]),
 								.cbe_in			(cbe_in[3:0]),
@@ -132,7 +138,9 @@ module pci(
 								.lock_in		(lock_in),
 								.cfg_read_val	(cfg_read_val[31:0]),
 								.cfg_done		(cfg_done),
-								.cfg_w_err		(cfg_w_err));
+								.cfg_w_err		(cfg_w_err),
+								.parity_error_response_reg (parity_error_response_reg),
+								.serr_enable_reg(serr_enable_reg));
 	
 	pci_cfg pci_configuration_space(
 									.intr_status(1'b0),
@@ -141,12 +149,13 @@ module pci(
 									.received_target_abort(1'b0),
 									.received_master_abort(1'b0),
 									.signaled_system_error(1'b0),
-									.detected_parity_error(1'b0),
 									/*AUTOINST*/
 									// Outputs
 									.cfg_read_val		(cfg_read_val[31:0]),
 									.cfg_done			(cfg_done),
 									.cfg_w_err			(cfg_w_err),
+									.serr_enable(serr_enable_reg),
+									.perr_response(parity_error_response_reg),
 									// Inputs
 									.clk				(clk),
 									.rst				(rst),
@@ -154,6 +163,7 @@ module pci(
 									.cfg_iswrite		(cfg_iswrite),
 									.cfg_offset			(cfg_offset[5:0]),
 									.cfg_write_val		(cfg_write_val[31:0]),
-									.cfg_be				(cfg_be[3:0]));
+									.cfg_be				(cfg_be[3:0]),
+									.parity_error(parity_error_detected));
 	
 endmodule // pci

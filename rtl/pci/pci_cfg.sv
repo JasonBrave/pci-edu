@@ -50,7 +50,10 @@ module pci_cfg
 	 input logic		 received_target_abort,
 	 input logic		 received_master_abort,
 	 input logic		 signaled_system_error,
-	 input logic		 detected_parity_error);
+	 input logic		 parity_error,
+	 // register output
+	 output logic		 serr_enable,
+	 output logic		 perr_response);
 
 	localparam   PCI_DEVSEL_TIMING = 2'b00;
 	localparam	 PCI_CAPABLE_FASTB2B = 1'b0;
@@ -73,30 +76,41 @@ module pci_cfg
 	localparam	 PCI_MSI_64BIT_ADDR_CAPABLE = 1'b1;
 	localparam	 PCI_MSI_MULTI_MSI_CAPABLE = 3'b000;
 
-	reg			 command_intr_disable;
-	reg			 command_fast_b2b;
-	reg			 command_serr_enable;
-	reg			 command_perr_response;
-	reg			 command_memwr_invalidate;
-	reg			 command_special_cycles;
-	reg			 command_bus_master;
-	reg			 command_memory_space;
-	reg			 command_io_space;
+	logic		 command_intr_disable;
+	logic		 command_fast_b2b;
+	logic		 command_serr_enable;
+	logic		 command_perr_response;
+	logic		 command_memwr_invalidate;
+	logic		 command_special_cycles;
+	logic		 command_bus_master;
+	logic		 command_memory_space;
+	logic		 command_io_space;
 
-	reg [7:0]	 cacheline_size;
-	reg [7:3]	 latency_timer;
+	logic		 detected_parity_error;
 
-	reg [31:4]	 bar0;
+	logic [7:0]	 cacheline_size;
+	logic [7:3]	 latency_timer;
 
-	reg [15:0]	 subsystem_id,subsystem_vendor_id;
+	logic [31:4] bar0;
 
-	reg [7:0]	 interrupt_line;
+	logic [15:0] subsystem_id,subsystem_vendor_id;
 
-	reg [2:0]	 msi_multiple_message;
-	reg			 msi_enable;
-	reg [63:2]	 msi_address;
-	reg [15:0]	 msi_data;
+	logic [7:0]	 interrupt_line;
 
+	logic [2:0]	 msi_multiple_message;
+	logic		 msi_enable;
+	logic [63:2] msi_address;
+	logic [15:0] msi_data;
+
+	always_ff @(posedge clk, negedge rst) begin
+		if(parity_error == 1'b1) begin
+			detected_parity_error <= 1'b1;
+		end
+	end
+
+	assign serr_enable = command_serr_enable;
+	assign perr_response = command_perr_response;
+	
 	always_ff @(posedge clk, negedge rst) begin
 		if(rst == 1'b0) begin
 			// command register reset
