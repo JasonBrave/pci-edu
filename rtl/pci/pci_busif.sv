@@ -191,6 +191,8 @@ module pci_busif(
 						devsel_out=1'b0;
 						ad_out = cfg_read_val;
 						ad_en = 1'b1;
+						par_en = 1'b1;
+						par_out = ^{cfg_read_val, cbe_in};
 						next_state = CFG_READ_COMP;
 					end
 				end else begin // if (parity_match == 1'b1)
@@ -205,6 +207,8 @@ module pci_busif(
 				devsel_out=1'b0;
 				ad_out = cfg_read_val;
 				ad_en = 1'b1;
+				par_en = 1'b1;
+				par_out = ^{cfg_read_val, cbe_in};
 				next_state = IDLE;
 			end
 

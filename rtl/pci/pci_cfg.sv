@@ -103,7 +103,9 @@ module pci_cfg
 	logic [15:0] msi_data;
 
 	always_ff @(posedge clk, negedge rst) begin
-		if(parity_error == 1'b1) begin
+		if(rst == 1'b0) begin
+			detected_parity_error <= 1'b0;
+		end else if(parity_error == 1'b1) begin
 			detected_parity_error <= 1'b1;
 		end
 	end
@@ -222,7 +224,7 @@ module pci_cfg
 						pci_pkg::CFG_COMMAND_STATUS: begin
 							if(cfg_be[0]) begin
 								command_io_space <= cfg_write_val[0];
-								command_io_space <= cfg_write_val[1];
+								command_memory_space <= cfg_write_val[1];
 								command_bus_master <= cfg_write_val[2];
 								command_special_cycles <= cfg_write_val[3];
 								command_memwr_invalidate <= cfg_write_val[4];
